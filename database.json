@@ -1,0 +1,6 @@
+{
+    "devices": 
+    {
+        "1": {"name": "SecondRoomLamp", "type": "lampRGB", "ip": "127.0.0.4", "functions": ["SwitchOn", "SwitchOff", "ChangeColor"]}
+    }
+}
