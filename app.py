@@ -32,11 +32,11 @@ def device(name):
         return "Request  not allowed", 405
 
 
-@app.route('/function/upload/<dname>', methods=['POST'])
-def upload_function(dname):
+@app.route('/function/upload/<name>', methods=['POST'])
+def upload_function(name):
     if request.method == 'POST':
-        if not pathlib.Path.exists(dname):
-            os.mkdir(dname)
+        if not pathlib.Path.exists(name):
+            os.mkdir(name)
         else:
             # check if the post request has the file part
             if 'file' not in request.files:
@@ -50,10 +50,9 @@ def upload_function(dname):
                 return redirect(request.url)
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                return redirect(url_for('uploaded_file',
-                                        filename=filename))
-        return {"message": "Function created"}, 201
+                file.save(os.path.join(app.config['UPLOAD_FOLDER']+'/'+name, filename))
+                return redirect(url_for('device',
+                                        name=name))
     else:
         return {"message": "Wrong method"}, 400
 
