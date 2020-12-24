@@ -50,11 +50,16 @@ def upload_function(name):
                 return redirect(request.url)
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER']+'/'+name, filename))
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'] + '/' + name, filename))
                 return redirect(url_for('device',
                                         name=name))
     else:
         return {"message": "Wrong method"}, 400
+
+
+@app.route('/function/<name>')
+def function(name):
+    return {"message": "foo bar"}, 200
 
 
 @app.route('/', methods=['GET', 'POST'])
