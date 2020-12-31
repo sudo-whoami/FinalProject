@@ -50,16 +50,22 @@ def upload_function(name):
                 return redirect(request.url)
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'] + '/' + name, filename))
-                return redirect(url_for('device',
-                                        name=name))
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], name, filename))
+                return redirect(url_for('device', name=name))
     else:
         return {"message": "Wrong method"}, 400
 
 
 @app.route('/function/<name>')
 def function(name):
-    return {"message": "foo bar"}, 200
+    if devicesDB.search(where('name') == name) is None:
+        return {"message": "No device found"}, 404
+    else:
+        from os import listdir
+        from os.path import isfile, join
+        script_path = join(UPLOAD_FOLDER, name)
+        scripts = [f for f in listdir(script_path) if isfile(join(script_path, f))]
+        return render_template("function.html", scripts=scripts)
 
 
 @app.route('/', methods=['GET', 'POST'])
