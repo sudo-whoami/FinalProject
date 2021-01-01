@@ -20,7 +20,6 @@
                 <th scope="col">Name</th>
                 <th scope="col">Type</th>
                 <th scope="col">IP</th>
-                <th scope="col">Functions</th>
                 <th scope="col"></th>
             </tr>
         </thead>
@@ -30,20 +29,6 @@
                     <td> {{ device.name }}</td>
                     <td> {{ device.type }}</td>
                     <td> {{ device.ip }}</td>
-                    <td class="function">
-                        <form action="/function" method="POST">
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Functions
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    {% for function in device.functions %}
-                                        <p class="dropdown-item" onclick="onFunctionClick('{{ device.name + '.' + function }}')">{{ function }}</p>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </form>
-                    </td>
                     <td>
                         <a href="/device/{{device.name}}">
                         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -56,29 +41,21 @@
             {% endfor %}
         </tbody>
     </table>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <script>
-        function onFunctionClick(name) {
-            var DeviceName = name.split(".")[0];
-            var FunctionName = name.split(".")[1];
-
-            fetch('http://localhost:5000/', {
-                method: 'PUT',
-                mode: 'cors',
-                cache: 'no-cache',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                redirect: 'follow', // manual, *follow, error
-                referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-                body: JSON.stringify(data) // body data type must match "Content-Type" header
-            })
-            .then(data => {
-                console.log(data.json()); // JSON data parsed by `data.json()` call
-            });
-        }
-    </script>
+    <hr>
+    <form action="{{ url_for('index') }}" method="POST">
+        <div class="form-group">
+            <label for="devicename">Device Name</label>
+            <input type="text" name="name" class="form-control" id="devicename" placeholder="Name of Device">
+        </div>
+        <div class="form-group">
+            <label for="devicetype">Device Type</label>
+            <input type="text" name="type" class="form-control" id="devicetype" placeholder="Type of Device">
+        </div>
+        <div class="form-group">
+            <label for="ip">IP</label>
+            <input type="text" name="ip" class="form-control" id="ip" placeholder="IP of Device">
+        </div>
+        <button type="submit" class="btn btn-primary">Create Device</button>
+    </form>
 </body>
 </html>

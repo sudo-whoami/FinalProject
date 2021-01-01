@@ -3,15 +3,46 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
     <style>
         body {
-            max-width: 500px;
+            max-width: 960px;
             margin: auto;
-        }
-
-        button {
-            margin-left: 15.5rem;
+            text-align: center;
         }
     </style>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        var newName = '' || $('#name').val();
+        var newType = '' || $('#type').val();
+        var newIP = '' || $('#ip').val();
+
+        let Data = {
+            name: newName,
+            type: newType,
+            ip: newIP,
+        };
+
+        $('#update').click(function() {
+            $.ajax({
+                contentType: 'application/json',
+                data: Data,
+                type: 'PUT',
+                success: function(result) {
+                    console.log(result);
+                }
+            });
+        });
+
+        $('#delete').click(function() {
+            $.ajax({
+                type: 'DELETE',
+                success: function(result) {
+                    console.log(result);
+                }
+            });
+        });
+    });
+
+    </script>
 </head>
 <body>
     <div class="form-group">
@@ -32,40 +63,8 @@
             </tbody>
         </table>
     </div>
-    <button class="btn btn-primary" onclick="submit()">Change Device Settings</button>
-    <script type="text/javascript">
-        async function submit() {
-            var newName = $('#name').val();
-            var newType = $('#type').val();
-            var newIP = $('#ip').val();
-
-            let data = {
-                newName: newName,
-                newType: newType,
-                newIP: newIP
-            }
-
-            fetch(window.location.href, {
-                method: 'POST',
-                mode: 'cors',
-                cache: 'no-cache',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                redirect: 'follow', // manual, *follow, error
-                referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-                body: JSON.stringify(data) // body data type must match "Content-Type" header
-            })
-            .then(data => {
-                console.log(data.json()); // JSON data parsed by `data.json()` call
-            });
-        }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <br>
-    <a href="{{ url_for('function', name=device.name) }}"> Page to call different functions</a>
-
-
+    <button class="btn btn-primary" id="update">Change Device Settings</button>
+    <button class="btn btn-primary btn-danger" id="delete">Delete Device</button> </br>
+    <a style="text-align: center;" href="{{ url_for('list_functions') }}"> Page to call different functions</a>
 </body>
 </html>
