@@ -1,3 +1,4 @@
+from typing import NoReturn
 from tinydb import TinyDB, where
 
 from flask import Flask, request, render_template, redirect, url_for, make_response, flash
@@ -8,9 +9,12 @@ import pathlib
 import subprocess
 import psutil
 
+from os import listdir
+from os.path import isfile, join
+
 
 UPLOAD_FOLDER = os.getcwd() + "/functions"
-ALLOWED_EXTENSIONS = {"py",}
+ALLOWED_EXTENSIONS = ["py"]
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -23,39 +27,46 @@ devicesDB = db.table('devices')
 
 class Script():
 
-    def __init__(self, filename):
-        self.filename = filename
-        self.status = {}
-        self.p = subprocess.call(["python", self.filename], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    def __init__(self, filepath):
+        self.filepath = filepath
+        self.status = {"message" : "", "code" : 0}
+        self.p = None
+        return
 
 
     def getStatus(self):
 
-        if not os.path.exists(self.filename):
+        if not os.path.exists(self.filepath):
             self.status['message'] = "File not found"
             self.status['code'] = 1
 
-        if not self.filename.split(".")[1] == "py":
+        elif not self.filepath.split(".")[1] == "py":
             self.status['message'] = "Not supported filetype"
             self.status['code'] = 2
 
-        if self.p == 0:
+        elif self.p.returncode == 0:
             self.status['message'] = "Script executed"
             self.status['code'] = 3
 
-        elif self.p == 1:
+        elif self.p.returncode == 1:
             self.status['message'] = "Script terminated"
             self.status['code'] = 4
+
+        else:
+            self.status['message'] = "Script running"
+            self.status['code'] = 0
 
         return self.status
 
 
-    def kill(self):
+    def run(self):
+        self.p = subprocess.Popen(["python", self.filepath], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        return
 
-        process = psutil.Process(self.p.pid)
-        for proc in process.children(recursive=True):
-            proc.kill()
-        process.kill()
+
+    def kill(self):
+        self.p.kill()
+        return
 
 
 
@@ -102,13 +113,15 @@ def upload_function():
             if 'file' not in request.files:
                 flash('No file part', 'warning')
                 return redirect('/functions'), 308
+                
             file = request.files['file']
             # if user does not select file, browser also
             # submit an empty part without filename
             if file.filename == '':
                 flash('No selected file', 'warning')
                 return redirect('/functions'), 308
-            if file and allowed_file(file.filename):
+
+            elif file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(UPLOAD_FOLDER, name, filename))
                 return redirect('/functions'), 308
@@ -124,17 +137,16 @@ def list_functions():
 
     else:
         try:
-            from os import listdir
-            from os.path import isfile, join
             script_path = join(UPLOAD_FOLDER, name)
-            scripts = [f for f in listdir(script_path) if isfile(join(script_path, f))]
+            scripts = [file for file in listdir(script_path) if isfile(join(script_path, file))]
             return render_template("functions.html", scripts=scripts)
         except:
+            flash('No files uploaded', 'warning')
             return redirect('/function/upload')
 
 
-@app.route('/function/run')
-def run_function():
+@app.route('/function/run/<filename>')
+def run_function(filename):
     name = request.cookies.get("device")
 
     if devicesDB.search(where('name') == name) is None:
@@ -145,9 +157,9 @@ def run_function():
         """
         interpreter for python scripts
         """
-        status = Script(os.path.join(UPLOAD_FOLDER, name, request.args.get('filename'))).getStatus()
+        status = Script(join(UPLOAD_FOLDER, name, filename)).getStatus()
 
-        return status
+        return render_template('/')
 
 
 @app.route('/', methods=['GET', 'POST'])
