@@ -1,13 +1,13 @@
 from typing import NoReturn
 from tinydb import TinyDB, where
+from tinydb.operations import add, set
 
 from flask import Flask, request, render_template, redirect, url_for, make_response, flash
 from werkzeug.utils import secure_filename
 
 import os
 import pathlib
-import subprocess
-import psutil
+from datetime import datetime
 
 from os import listdir
 from os.path import isfile, join
@@ -24,9 +24,9 @@ db = TinyDB('database.json')
 
 devicesDB = db.table('devices')
 
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route('/device/<name>', methods=['GET', 'PUT', 'DELETE'])
 def device(name):
@@ -39,13 +39,12 @@ def device(name):
 
     if request.method == 'PUT':
         updatedValues = request.get_json()
-        devicesDB.update(set(updatedValues), where('name') == name)
-        flash('Device edited', 'success')
+        print(updatedValues)
+        #devicesDB.update(set(updatedValues), where('name') == name)
         return redirect('/'), 308
 
     if request.method == 'DELETE':
         devicesDB.remove(where('name') == name)
-        flash('Device deleted', 'success')
         return redirect('/'), 308
 
 
@@ -57,6 +56,8 @@ def upload_function():
         return render_template('upload_script.html')
 
     if request.method == 'POST':
+
+        uploadTime = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
         if not pathlib.Path(os.path.join(UPLOAD_FOLDER, name)).exists():
             os.mkdir(os.path.join(UPLOAD_FOLDER, name))
@@ -75,7 +76,8 @@ def upload_function():
             elif file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(UPLOAD_FOLDER, name, filename))
-                flash('Folder created. Script uploaded.', 'success')
+                scriptData = {'scriptName': filename, 'uploadTime': uploadTime}    
+                devicesDB.update(add("scripts", scriptData), where('name') == name)
                 return redirect('/scripts'), 308
 
         else:
@@ -94,6 +96,8 @@ def upload_function():
             elif file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(UPLOAD_FOLDER, name, filename))
+                scriptData = {'scriptName': filename, 'uploadTime': uploadTime}    
+                devicesDB.update(add("scripts", scriptData), where('name') == name)
                 return redirect('/scripts'), 308
 
 
@@ -108,7 +112,8 @@ def list_scripts():
     else:
         try:
             script_path = join(UPLOAD_FOLDER, name)
-            scripts = [file for file in listdir(script_path) if isfile(join(script_path, file))]
+            uploadDates = devicesDB.search(where('name') == name)[0]
+            scripts = zip([file for file in listdir(script_path) if isfile(join(script_path, file))], uploadDates)
             return render_template("scripts.html", scripts=scripts)
         except:
             flash('No files uploaded', 'warning')
@@ -118,22 +123,19 @@ def list_scripts():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
-        return render_template("devices.html", devices=devicesDB.all())
+        return render_template("index.html", devices=devicesDB.all())
 
     if request.method == 'POST':
 
         newDevice = {
             "name": request.form['name'],
             "type": request.form['type'],
-            "ip": request.form['ip']
+            "ip": request.form['ip'],
+            "scripts": []
         }
 
         if len(devicesDB.search(where('name') == newDevice['name'])) != 0:
             flash('Device already exists', 'error')
-            return redirect('/')
-
-        elif not (all(newDevice.values())):
-            flash('You need to fill the device information', 'error')
             return redirect('/')
 
         else:
