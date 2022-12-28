@@ -35,11 +35,12 @@
         <tbody>
         {% for s in scripts %}
         <tr>
-            <td><b style="text-decoration: underline blue; color: blue;"> {{ s.scriptName }} </b></td>
-            <td>{{ s.uploadTime }}</td>
+            <td><b style="text-decoration: underline blue; color: blue;"> {{ scripts }} </b></td>
+            <td>{{ uploadTime }}</td>
         </tr>
         {% endfor %}
         </tbody>
     </table>
+    <a style="text-align: center;" href="/script/upload">File Upload</a>
 </div>
 {% endblock %}
