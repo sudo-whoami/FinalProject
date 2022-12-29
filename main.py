@@ -5,29 +5,21 @@ import sys
 
 from rgb_tone import *
 
-if len(sys.argv) != 3:
-    print('Incorrect arguments!\nUsage: ./main.py <image> <sound>')
+if len(sys.argv) != 2:
+    print('Incorrect arguments!\nUsage: ./main.py <image>')
     sys.exit()
 
-# Open the image file
-image = Image.open(sys.argv[1])
+# Open the image jpg file
+image = Image.open("images/" + sys.argv[1])
 image.show()
 
 # Convert the image to grayscale and get the pixel values
-image = image.convert('L')
-image.show()
-
-pixels = np.array(image)
+pixels = np.asarray(image)
 
 # Normalize the pixel values between -1 and 1
-pixels = pixels / 255.0
-pixels = pixels * 2.0 - 1.0
+pixels_resized = np.array(image.resize((128, 128)))
+image_resized = Image.fromarray(pixels_resized)
+image_resized.show()
 
-""""
-for x in range(pixels.shape[0]):
-    for y in range(pixels.shape[1]):
-        print(pixels[x][y])
-"""
-
-# Save the pixel values as a WAV file
-write(sys.argv[2], 44100, pixels)
+# Save the pixel values as a WAV file, name will be input file name
+write("sounds/" + sys.argv[1] + ".wav", 44100, pixels)
